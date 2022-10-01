@@ -1,0 +1,4 @@
+interface IWhosePlayer
+{
+    Player GetPlayersTown();
+}
