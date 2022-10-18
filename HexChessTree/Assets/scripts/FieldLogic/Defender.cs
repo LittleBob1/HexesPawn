@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
 {
@@ -11,6 +12,7 @@ public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
     private int health;
     private int armor;
     private int damage;
+    private int level;
     private Player pawnThisPlayer;
 
     private List<GameObject> listOfHex = new List<GameObject>();
@@ -20,6 +22,10 @@ public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
     private ButtonLogicBuy logBut;
     private StartGameTwoPlayer playerLogic;
     private MaterialsContainer resourses;
+    private CanvasesController myCanvas;
+    private OutlineChess outChess;
+
+    private Dictionary<int, string> levels;
 
     public override void Initialization(GameObject[,] map)
     {
@@ -27,6 +33,78 @@ public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
         logBut = GameObject.Find("ButtonsController").GetComponent<ButtonLogicBuy>();
         playerLogic = GameObject.Find("playerLogic").GetComponent<StartGameTwoPlayer>();
         resourses = GameObject.Find("ResoursesContainer").GetComponent<MaterialsContainer>();
+        outChess = GameObject.Find("SetController").GetComponent<OutlineChess>();
+        myCanvas = transform.GetChild(0).GetComponent<CanvasesController>();
+
+        InitializeLvl();
+    }
+
+    private void InitializeLvl()
+    {
+        levels = new Dictionary<int, string>
+        {
+            {0, "2 2 1"},
+            {1, "3 3 2 40"},
+            {2, "4 4 3 60"},
+        };
+    }
+
+    public override void SetLvl(int level, GameObject textUpg)
+    {
+        if (level == 0)
+        {
+            string[] s = levels[level].Split(" ");
+            this.level = level;
+            health = int.Parse(s[0]);
+            armor = int.Parse(s[1]);
+            damage = int.Parse(s[2]);
+        }
+        else if (level == -1)
+        {
+            if (this.level + 1 <= 2)
+            {
+                string[] lv = levels[this.level + 1].Split(" ");
+                textUpg.GetComponent<TMP_Text>().text = "Upgrade to lvl " + (this.level + 1).ToString() + "\n" + lv[3];
+            }
+            else
+            {
+                textUpg.GetComponent<TMP_Text>().text = "MAX LVL";
+            }
+        }
+        else if (level > 0)
+        {
+            if (level <= 2)
+            {
+                string[] lv = levels[level].Split(" ");
+
+                if (playerLogic.currentPlayer.getGold() >= int.Parse(lv[3]))
+                {
+                    this.level = level;
+                    health = int.Parse(lv[0]);
+                    armor = int.Parse(lv[1]);
+                    damage = int.Parse(lv[2]);
+                    myCanvas.RecalculationParameters();
+                    playerLogic.currentPlayer.setGold(playerLogic.currentPlayer.getGold() - int.Parse(lv[3]));
+                    logBut.UpdateGoldOnText();
+                    if (level + 1 <= 2)
+                    {
+                        textUpg.GetComponent<TMP_Text>().text = "Upgrade to lvl " + (this.level + 1).ToString() + "\n" + lv[3];
+                    }
+                    else
+                    {
+                        textUpg.GetComponent<TMP_Text>().text = "MAX LVL";
+                    }
+                }
+            }
+            else
+            {
+                textUpg.GetComponent<TMP_Text>().text = "MAX LVL";
+            }
+        }
+    }
+    public override int GetLvl()
+    {
+        return level;
     }
     public Player GetPlayersTown()
     {
@@ -34,8 +112,27 @@ public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
     }
     public void IDamage(int damage)
     {
-        health -= damage;
-        Debug.Log(this.gameObject + "damage");
+        if (armor > 0)
+        {
+            armor--;
+        }
+        else
+        {
+            health -= damage;
+        }
+        if (health <= 0)
+        {
+            logBut.pawns.Remove(gameObject);
+            pawnThisPlayer.removeDefender(gameObject.GetComponent<Defender>());
+            pawnThisPlayer.removeObject(gameObject);
+            pawnThisPlayer.removePawn(gameObject.GetComponent<Pawns>());
+            map[indexRow, indexCell].GetComponent<HexLogic>().isEmpty = true;
+            map[indexRow, indexCell].GetComponent<HexLogic>().SetObjOnHex(null);
+            playerLogic.currentPlayer.setGold(playerLogic.currentPlayer.getGold() + 35);
+            logBut.UpdateGoldOnText();
+            Destroy(gameObject);
+        }
+        myCanvas.RecalculationParameters();
     }
     public int GetHealth()
     {
@@ -44,6 +141,10 @@ public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
     public int GetArmor()
     {
         return armor;
+    }
+    public int GetDamage()
+    {
+        return damage;
     }
     public override void setDamage(int damage)
     {
@@ -89,7 +190,7 @@ public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
 
     public override void CellIllumination()
     {
-        for(int i = 0; i < listOfHex.Count; i++)
+        for (int i = 0; i < listOfHex.Count; i++)
         {
             if (listOfHex[i] != null)
             {
@@ -99,7 +200,7 @@ public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
                 }
                 else
                 {
-                    if(listOfHex[i].GetComponent<HexLogic>().GetObjOnHex().GetComponent<IWhosePlayer>().GetPlayersTown() != playerLogic.currentPlayer)
+                    if (listOfHex[i].GetComponent<HexLogic>().GetObjOnHex().GetComponent<IWhosePlayer>().GetPlayersTown() != playerLogic.currentPlayer)
                     {
                         listOfHex[i].GetComponent<HexLogic>().GetObjOnHex().GetComponent<MeshRenderer>().material = resourses.OpponentPawn;
                     }
@@ -118,7 +219,7 @@ public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
             }
         }
 
-        for(int i = 0; i < listOfHex.Count; i++)
+        for (int i = 0; i < listOfHex.Count; i++)
         {
             for (int j = 0; j < listOfHexPortal.Count; j++)
             {
@@ -153,13 +254,13 @@ public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
 
         List<int> indexThisPortal = new List<int>();
 
-        for(int i = 0; i < playerLogic.currentPlayer.getListOfPortals().Count; i++)
+        for (int i = 0; i < playerLogic.currentPlayer.getListOfPortals().Count; i++)
         {
             List<GameObject> list1 = playerLogic.currentPlayer.getListOfPortals()[i].GetComponent<Portal>().GetPortalHexes();
 
             for (int g = 0; g < list1.Count; g++)
             {
-                if(map[indexRow, indexCell] == list1[g])
+                if (map[indexRow, indexCell] == list1[g])
                 {
                     indexThisPortal.Add(i);
                     break;
@@ -180,7 +281,7 @@ public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
                     }
                 }
             }
-            else if(indexThisPortal.Count > 1)
+            else if (indexThisPortal.Count > 1)
             {
                 List<GameObject> list1 = playerLogic.currentPlayer.getListOfPortals()[i].GetComponent<Portal>().GetPortalHexes();
 
@@ -192,7 +293,7 @@ public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
             }
         }
 
-        if(indexThisPortal.Count == 0)
+        if (indexThisPortal.Count == 0)
         {
             listOfHexPortal.Clear();
         }
@@ -204,6 +305,9 @@ public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
 
         if (s[0] == resourses.OpponentPawn.name)
         {
+            int row = currentOpponentObj.GetComponent<IParametresOfPawns>().GetRow();
+            int cell = currentOpponentObj.GetComponent<IParametresOfPawns>().GetCell();
+
             gameObject.GetComponent<Outline>().enabled = false;
             moveIsMade = true;
             currentOpponentObj.GetComponent<IDamagable>().IDamage(damage);
@@ -216,9 +320,29 @@ public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
             {
                 currentOpponentObj.GetComponent<MeshRenderer>().material = resourses.DefaultPawnFirstPlayer;
             }
-
+            if (currentOpponentObj.GetComponent<IParametresOfPawns>().GetHealth() <= 0)
+            {
+                MoveAfterKill(map[row, cell]);
+            }
             ActionAfterMove();
         }
+    }
+
+    private void MoveAfterKill(GameObject hex)
+    {
+        moveIsMade = true;
+        map[indexRow, indexCell].GetComponent<HexLogic>().isEmpty = true;
+        map[indexRow, indexCell].GetComponent<HexLogic>().SetObjOnHex(null);
+        indexRow = hex.GetComponent<HexLogic>().indexRow;
+        indexCell = hex.GetComponent<HexLogic>().indexCell;
+        map[indexRow, indexCell].GetComponent<HexLogic>().isEmpty = false;
+        map[indexRow, indexCell].GetComponent<HexLogic>().SetObjOnHex(this.gameObject);
+        ListRecalculation();
+        transform.position = hex.transform.position;
+        gameObject.GetComponent<Outline>().enabled = false;
+        hex.GetComponent<HexLogic>().isEmpty = false;
+
+        ActionAfterMove();
     }
 
     public override void Move(GameObject hex)
@@ -245,7 +369,7 @@ public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
         {
             moveIsMade = true;
             playerLogic.currentPlayer.setGold(playerLogic.currentPlayer.getGold() - 10);
-            logBut.textValue.text = "Value: " + playerLogic.currentPlayer.getGold().ToString(); 
+            logBut.textValue.text = "Value: " + playerLogic.currentPlayer.getGold().ToString();
             map[indexRow, indexCell].GetComponent<HexLogic>().isEmpty = true;
             map[indexRow, indexCell].GetComponent<HexLogic>().SetObjOnHex(null);
             indexRow = hex.GetComponent<HexLogic>().indexRow;
@@ -274,24 +398,25 @@ public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
             }
         }
 
-        List<Pawns> pawns = new List<Pawns>();
+        List<GameObject> pawns = new List<GameObject>();
         Material playerMaterial;
 
         if (playerLogic.currentPlayer.getName() == "playerOne")
         {
-            pawns = playerLogic.GetPlayerTwo().getListOfPawns();
+            pawns = playerLogic.GetPlayerTwo().getAllObjects();
             playerMaterial = resourses.DefaultPawnSecondPlayer;
         }
         else
         {
-            pawns = playerLogic.GetPlayerOne().getListOfPawns();
+            pawns = playerLogic.GetPlayerOne().getAllObjects();
             playerMaterial = resourses.DefaultPawnFirstPlayer;
         }
 
         for (int i = 0; i < pawns.Count; i++)
         {
-            pawns[i].gameObject.GetComponent<MeshRenderer>().material = playerMaterial;
+            pawns[i].GetComponent<MeshRenderer>().material = playerMaterial;
         }
+        outChess.panelUpgrade.SetActive(false);
     }
 
     public override void SetIndexes(int indexRow, int indexCell)
@@ -300,12 +425,12 @@ public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
         this.indexCell = indexCell;
     }
 
-    public override int GetRow()
+    public int GetRow()
     {
         return indexRow;
     }
 
-    public override int GetCell()
+    public int GetCell()
     {
         return indexCell;
     }
@@ -386,7 +511,7 @@ public class Defender : Pawns, IDamagable, IWhosePlayer, IParametresOfPawns
         {
             listOfHex.Add(map[indexRow - 1, indexCell - 1]);
         }
-        catch{ }
+        catch { }
         try
         {
             listOfHex.Add(map[indexRow - 1, indexCell]);

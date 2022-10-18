@@ -9,8 +9,18 @@ public class Portal : MonoBehaviour, IDamagable, IWhosePlayer, IParametresOfPawn
     private int health;
     private int armor;
     private Player pawnThisPlayer;
+    private StartGameTwoPlayer playerLogic;
+    private CanvasesController myCanvas;
 
+    private GameObject[,] map;
     private List<GameObject> portalHex = new List<GameObject>();
+
+    public void Initialization(GameObject[,] map)
+    {
+        this.map = map;
+        playerLogic = GameObject.Find("playerLogic").GetComponent<StartGameTwoPlayer>();
+        myCanvas = transform.GetChild(0).GetComponent<CanvasesController>();
+    }
 
     public void SetIndexesPortal(int indexRow, int indexCell, GameObject[,] map)
     {
@@ -33,8 +43,24 @@ public class Portal : MonoBehaviour, IDamagable, IWhosePlayer, IParametresOfPawn
     }
     public void IDamage(int damage)
     {
-        health -= damage;
-        Debug.Log(this.gameObject + "damage");
+        if (armor > 0)
+        {
+            armor--;
+        }
+        else
+        {
+            health -= damage;
+        }
+        if (health <= 0)
+        {
+            pawnThisPlayer.removePortal(gameObject.GetComponent<Portal>());
+            pawnThisPlayer.removeObject(gameObject);
+            map[indexRow, indexCell].GetComponent<HexLogic>().isEmpty = true;
+            map[indexRow, indexCell].GetComponent<HexLogic>().SetObjOnHex(null);
+            Destroy(gameObject);
+            playerLogic.currentPlayer.setGold(playerLogic.currentPlayer.getGold() + 15);
+        }
+        myCanvas.RecalculationParameters();
     }
     public void setPlayer(Player pawnThisPlayer)
     {

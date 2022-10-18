@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class OutlineChess : MonoBehaviour
 {
-    private List<Transform> chess;
     public Transform currentObj;
     private Transform currentOpponentObj;
     private Transform currentHex;
@@ -13,21 +12,23 @@ public class OutlineChess : MonoBehaviour
     private ButtonLogicBuy butLog;
     private StartGameTwoPlayer playerLogic;
     private MaterialsContainer resourses;
+    private UpgradeController upgCont;
 
     private GameObject[,] map;
 
     public bool inTree = false;
 
+    public GameObject panelUpgrade;
+
     private void Start()
     {
         butLog = GameObject.Find("ButtonsController").GetComponent<ButtonLogicBuy>();
+        upgCont = GameObject.Find("ButtonsController").GetComponent<UpgradeController>();
         playerLogic = GameObject.Find("playerLogic").GetComponent<StartGameTwoPlayer>();
         resourses = GameObject.Find("ResoursesContainer").GetComponent<MaterialsContainer>();
-        chess = new List<Transform>();
         SimulationMap.GetMap += getMap;
     }
     
-
     void Update()
     {
         if(Input.touchCount == 1)
@@ -50,15 +51,48 @@ public class OutlineChess : MonoBehaviour
                             currentPlayerPawn = true;
                         }
 
-                        if (currentPlayerPawn && obj.gameObject.GetComponent<Pawns>().GetBoolMoved() == false)
+                        if (currentPlayerPawn && obj.gameObject.GetComponent<Pawns>().GetBoolMoved() == true && obj.gameObject.GetComponent<Outline>().enabled == false)
                         {
                             obj.gameObject.GetComponent<Outline>().enabled = true;
-                            IlluminationCancellation();
-                            IllumOpponentPawnDisable();
-                            obj.gameObject.GetComponent<Pawns>().CellIllumination();
-                            chess.Add(obj);
+                            upgCont.UpgradePawn(obj.gameObject);
+                            panelUpgrade.SetActive(true);
                             currentObj = obj;
                             currentOpponentObj = null;
+                            IlluminationCancellation();
+                            IllumOpponentPawnDisable();
+                        }
+                        else if (currentPlayerPawn && obj.gameObject.GetComponent<Pawns>().GetBoolMoved() == true && obj.gameObject.GetComponent<Outline>().enabled == true)
+                        {
+                            obj.gameObject.GetComponent<Outline>().enabled = false;
+                            panelUpgrade.SetActive(false);
+                            currentObj = null;
+                            currentOpponentObj = null;
+                            IlluminationCancellation();
+                            IllumOpponentPawnDisable();
+                        }
+
+                        if (currentPlayerPawn && obj.gameObject.GetComponent<Pawns>().GetBoolMoved() == false)
+                        {
+                            if(obj.gameObject.GetComponent<Outline>().enabled == true)
+                            {
+                                obj.gameObject.GetComponent<Outline>().enabled = false;
+                                panelUpgrade.SetActive(false);
+                                IlluminationCancellation();
+                                IllumOpponentPawnDisable();
+                                currentObj = null;
+                                currentOpponentObj = null;
+                            }
+                            else
+                            {
+                                obj.gameObject.GetComponent<Outline>().enabled = true;
+                                upgCont.UpgradePawn(obj.gameObject);
+                                panelUpgrade.SetActive(true);
+                                IlluminationCancellation();
+                                IllumOpponentPawnDisable();
+                                obj.gameObject.GetComponent<Pawns>().CellIllumination();
+                                currentObj = obj;
+                                currentOpponentObj = null;
+                            }
                         }
                         if (currentObj != null && currentPlayerPawn == false)
                         {

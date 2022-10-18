@@ -18,7 +18,6 @@ public class ButtonLogicBuy : MonoBehaviour
     public string key;
 
     public List<GameObject> pawns = new List<GameObject>();
-    //public List<GameObject> portals = new List<GameObject>();
 
     private List<GameObject> listOfHexForPortals = new List<GameObject>();
     private List<GameObject> listOfHexForTreePlayerOne = new List<GameObject>();
@@ -105,6 +104,11 @@ public class ButtonLogicBuy : MonoBehaviour
         }
     }
 
+    public void UpdateGoldOnText()
+    {
+        textValue.text = "Gold: " + playerLogic.currentPlayer.getGold().ToString();
+    }
+
     private void GetMap(GameObject[,] m)
     {
         map = m;
@@ -146,9 +150,7 @@ public class ButtonLogicBuy : MonoBehaviour
                                 scriptPawn.Initialization(map);
                                 scriptPawn.ListRecalculation();
                                 scriptPawn.setPlayer(playerLogic.currentPlayer);
-                                scriptPawn.setHealth(2);
-                                scriptPawn.setArmor(0);
-                                scriptPawn.setDamage(3);
+                                scriptPawn.SetLvl(0, null);
                                 playerLogic.currentPlayer.addPawn(g.GetComponent<Pawns>());
                                 playerLogic.currentPlayer.addAttacker(g.GetComponent<Attacker>());
                                 playerLogic.currentPlayer.addObject(g);
@@ -163,9 +165,7 @@ public class ButtonLogicBuy : MonoBehaviour
                                 scriptPawn.Initialization(map);
                                 scriptPawn.ListRecalculation();
                                 scriptPawn.setPlayer(playerLogic.currentPlayer);
-                                scriptPawn.setHealth(2);
-                                scriptPawn.setArmor(2);
-                                scriptPawn.setDamage(1);
+                                scriptPawn.SetLvl(0, null);
                                 playerLogic.currentPlayer.addPawn(g.GetComponent<Pawns>());
                                 playerLogic.currentPlayer.addDefender(g.GetComponent<Defender>());
                                 playerLogic.currentPlayer.addObject(g);
@@ -176,6 +176,7 @@ public class ButtonLogicBuy : MonoBehaviour
                                 GameObject g = InstantiatePawn(obj);
                                 Portal scriptPawn = g.GetComponent<Portal>();
                                 playerLogic.currentPlayer.setGold(playerLogic.currentPlayer.getGold() - 25);
+                                scriptPawn.Initialization(map);
                                 scriptPawn.SetIndexesPortal(obj.GetComponent<HexLogic>().indexRow, obj.GetComponent<HexLogic>().indexCell, map);
                                 scriptPawn.setPlayer(playerLogic.currentPlayer);
                                 scriptPawn.SetHealth(2);
@@ -206,6 +207,7 @@ public class ButtonLogicBuy : MonoBehaviour
     {
         outChess.inTree = !outChess.inTree;
         outChess.currentObj = null;
+        outChess.panelUpgrade.SetActive(false);
         IlluminationCancellation();
         IllumOpponentPawnDisable();
         key = null;
@@ -226,6 +228,7 @@ public class ButtonLogicBuy : MonoBehaviour
     {
         outChess.inTree = false;
         outChess.currentObj = null;
+        outChess.panelUpgrade.SetActive(false);
         IlluminationCancellation();
         IllumOpponentPawnDisable();
         key = null;
@@ -303,8 +306,8 @@ public class ButtonLogicBuy : MonoBehaviour
 
         for (int i = 0; i < currentPlayerPawns.Count; i++)
         {
-            int row = currentPlayerPawns[i].GetComponent<Pawns>().GetRow();
-            int cell = currentPlayerPawns[i].GetComponent<Pawns>().GetCell();
+            int row = currentPlayerPawns[i].GetComponent<IParametresOfPawns>().GetRow();
+            int cell = currentPlayerPawns[i].GetComponent<IParametresOfPawns>().GetCell();
 
             if (row == map.GetLength(0) / 2)
             {

@@ -92,6 +92,8 @@ public class SimulationMap : MonoBehaviour
         treeOne.GetComponent<MyTree>().setPlayer(playerLogic.GetPlayerOne());
         treeOne.GetComponent<MyTree>().setArmor(1);
         treeOne.GetComponent<MyTree>().setHealth(6);
+        treeOne.GetComponent<MyTree>().SetRow(0);
+        treeOne.GetComponent<MyTree>().SetCell(sideLength / 2);
         treeOne.GetComponent<MeshRenderer>().material = resourses.DefaultPawnFirstPlayer;
         map[0, sideLength / 2].GetComponent<HexLogic>().isEmpty = false;
         map[0, sideLength / 2].GetComponent<HexLogic>().SetObjOnHex(treeOne);
@@ -100,6 +102,9 @@ public class SimulationMap : MonoBehaviour
         treeTwo.GetComponent<MyTree>().setPlayer(playerLogic.GetPlayerTwo());
         treeTwo.GetComponent<MyTree>().setArmor(1);
         treeTwo.GetComponent<MyTree>().setHealth(6);
+        treeTwo.GetComponent<MyTree>().setHealth(6);
+        treeTwo.GetComponent<MyTree>().SetRow(map.GetLength(0) - 1);
+        treeTwo.GetComponent<MyTree>().SetCell(sideLength / 2);
         treeTwo.GetComponent<MeshRenderer>().material = resourses.DefaultPawnSecondPlayer;
         map[map.GetLength(0) - 1, sideLength / 2].GetComponent<HexLogic>().isEmpty = false;
         map[map.GetLength(0) - 1, sideLength / 2].GetComponent<HexLogic>().SetObjOnHex(treeTwo);

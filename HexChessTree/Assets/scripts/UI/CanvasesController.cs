@@ -5,13 +5,23 @@ using TMPro;
 
 public class CanvasesController : MonoBehaviour
 {
+    private TMP_Text tt;
     private void Start()
     {
-        TMP_Text tt = transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>();
+        tt = transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>();
         int hp = transform.parent.gameObject.GetComponent<IParametresOfPawns>().GetHealth();
         int armor = transform.parent.gameObject.GetComponent<IParametresOfPawns>().GetArmor();
+        int damage = transform.parent.gameObject.GetComponent<IParametresOfPawns>().GetDamage();
 
-        tt.text = "HP " + hp + " A " + armor;
+        tt.text = "HP " + hp + " A " + armor + " D " + damage;
+    }
+    public void RecalculationParameters()
+    {
+        int hp = transform.parent.gameObject.GetComponent<IParametresOfPawns>().GetHealth();
+        int armor = transform.parent.gameObject.GetComponent<IParametresOfPawns>().GetArmor();
+        int damage = transform.parent.gameObject.GetComponent<IParametresOfPawns>().GetDamage();
+
+        tt.text = "HP " + hp + " A " + armor + " D " + damage;
     }
     void Update()
     {

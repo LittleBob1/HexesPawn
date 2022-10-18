@@ -51,6 +51,7 @@ public class ChangeOfSides : MonoBehaviour
 
         butLog.RecalculationPawns();
         butLog.CloseAllForChangeSide();
+        butLog.UpdateGoldOnText();
     }
 
     private void SetNotMovedOnPawns()

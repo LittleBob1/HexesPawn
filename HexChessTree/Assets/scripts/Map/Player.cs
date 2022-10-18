@@ -43,6 +43,10 @@ public class Player
     {
         this.myTree = myTree;
     }
+    public MyTree getMyTree()
+    {
+        return myTree;
+    }
 
     public List<Portal> getListOfPortals()
     {

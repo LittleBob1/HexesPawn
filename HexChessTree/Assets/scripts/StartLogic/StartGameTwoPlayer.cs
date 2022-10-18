@@ -12,6 +12,8 @@ public class StartGameTwoPlayer : MonoBehaviour
     public TMP_Text currentPlayerText;
 
     private RotateAroundAndZoom rt;
+    private ButtonLogicBuy logBut;
+
 
     private void Start()
     {
@@ -19,6 +21,7 @@ public class StartGameTwoPlayer : MonoBehaviour
         playerTwo = new Player("playerTwo");
 
         rt = GameObject.Find("MainCamera").GetComponent<RotateAroundAndZoom>();
+        logBut = GameObject.Find("ButtonsController").GetComponent<ButtonLogicBuy>();
 
         SideSelection();
     }
